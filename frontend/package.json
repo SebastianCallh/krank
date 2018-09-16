@@ -1,6 +1,6 @@
 {
     "scripts": {
-        "build": "pulp build --to app/index.js",
-        "watch": "pulp --watch build --to app/index.js"
+        "build": "pulp build --to dist/index.js",
+        "watch": "pulp --watch build --to dist/index.js"
     }
 }
