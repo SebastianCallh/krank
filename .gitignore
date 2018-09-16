@@ -1,8 +1,13 @@
-elm-stuff
-node_modules
-elm.js
 npm-debug.log
 .DS_Store
-yarn-error.log
 dist
 /dist
+/frontend/bower_components/
+/frontend/node_modules/
+/frontend/.pulp-cache/
+/frontend/output/
+/frontend/generated-docs/
+/frontend/.psc-package/
+/frontend/.psc*
+/frontend/.purs*
+/frontend/.psa*
