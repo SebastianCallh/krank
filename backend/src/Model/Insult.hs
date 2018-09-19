@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric       #-}
+{-# LANGUAGE NamedFieldPuns      #-}
 {-# LANGUAGE OverloadedStrings   #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 
@@ -30,7 +31,9 @@ import           Model.Person
 data Insult = Insult
   { id     :: !Int
   , added  :: !UTCTime
-  , fields :: !NewInsult
+  , from   :: !Person
+  , to     :: !Person
+  , amount :: !Int
   } deriving Generic
 
 instance FromJSON Insult
@@ -58,23 +61,18 @@ new
   -> NewInsult
 new = NewInsult
 
-from :: Insult -> Person
-from = from' . fields
-
-to :: Insult -> Person
-to = to' . fields
-
-amount :: Insult -> Int
-amount = amount' . fields
 
 save :: MonadIO m => NewInsult -> m Insult
-save fields' = do
+save newInsult@NewInsult { from', to', amount'} = do
   time <- liftIO getCurrentTime
-  key  <- Db.run $ insert $ toDb time fields'
-  pure $ Insult
-    (keyToInt key)
-    time
-    fields'
+  key  <- Db.run $ insert $ toDb time newInsult
+  pure Insult
+    { id     = keyToInt key
+    , added  = time
+    , from   = from'
+    , to     = to'
+    , amount = amount'
+    }
 
 all :: MonadIO m => m [Insult]
 all = do
@@ -85,11 +83,10 @@ fromDb :: Entity Db.Insult -> Insult
 fromDb (Entity key dbInsult) = Insult
   (keyToInt key)
   (Db.insultAdded dbInsult)
-  (NewInsult
-    (Db.insultFrom dbInsult)
-    (Db.insultTo dbInsult)
-    (Db.insultAmount dbInsult)
-  )
+  (Db.insultFrom dbInsult)
+  (Db.insultTo dbInsult)
+  (Db.insultAmount dbInsult)
+
 
 toDb :: UTCTime -> NewInsult -> Db.Insult
 toDb time f = Db.Insult
