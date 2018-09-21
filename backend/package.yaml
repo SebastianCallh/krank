@@ -29,6 +29,7 @@ dependencies:
 - persistent-sqlite
 - persistent-template
 - resourcet
+- safe
 - servant
 - servant-server
 - text
