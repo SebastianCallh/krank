@@ -21,6 +21,8 @@ type InsultAPI
     (Get '[JSON] [Insult]
     :<|> ReqBody '[JSON] NewInsult :> Post '[JSON] Insult)
 
+type KrankAPI = InsultAPI :<|> Raw
+
 main :: IO ()
 main = do
   port <- lookupSetting "PORT" 8081
@@ -49,7 +51,8 @@ lookupSetting env def = do
             ]
 
 app :: Application
-app = cors (const $ Just corsPolicy) $ serve insultAPI server
+app = cors (const $ Just corsPolicy) $ serve krankAPI $ server
+      :<|> serveDirectoryFileServer "static/"
   where
     corsPolicy  = simpleCorsResourcePolicy
       { corsRequestHeaders = [ "authorization", "content-type" ]
@@ -59,6 +62,7 @@ server :: Server InsultAPI
 server = getInsults
   :<|> postInsult
 
+
 postInsult :: NewInsult -> Handler Insult
 postInsult = Insult.save
 
@@ -67,3 +71,6 @@ getInsults = Insult.all
 
 insultAPI :: Proxy InsultAPI
 insultAPI = Proxy
+
+krankAPI :: Proxy KrankAPI
+krankAPI = Proxy
