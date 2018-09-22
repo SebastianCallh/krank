@@ -15,6 +15,8 @@ data User
     | Seba
     | Tintin
 
+derive instance eqUser :: Eq User
+derive instance ordUser :: Ord User
 instance showUser :: Show User where
   show = userName
   
