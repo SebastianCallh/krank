@@ -1,0 +1,93 @@
+body {
+    margin: 0 px;    
+    font-family: Helvetica, "Trebuchet MS", Verdana, sans-serif;
+    background: #fff;
+    color: #141823;
+}
+
+
+div.header h1 {
+    margin: 5px;
+}
+
+div.header .top-right {
+    position: absolute;
+    top: 0;
+    right: 0;
+    padding: 12px;
+    font-size: 2em;
+    color: inherit;
+    outline: none;
+}
+
+div.header .top-right:active {
+    -webkit-transform:scale(.9); /* Safari and Chrome */
+    -moz-transform:scale(.9); /* Firefox */
+    -ms-transform:scale(.9); /* IE 9 */
+    -o-transform:scale(.9); /* Opera */
+     transform:scale(.9);
+}
+
+
+div.user-panel {
+    grid-template-columns: 50% 50%;
+    display: grid;
+    width: 100%;
+}
+
+div.user-panel a.user-button {
+    margin: 5px;
+    padding: 35px;
+    font-size: 1.5em;
+    text-align:center;
+    cursor: pointer;
+    background-color: #eee;
+    text-decoration: none;
+    outline: none;
+    
+    -webkit-transition: all .1s ease; /* Safari and Chrome */
+    -moz-transition: all .1s ease; /* Firefox */
+    -ms-transition: all .1s ease; /* IE 9 */
+    -o-transition: all .1s ease; /* Opera */
+    transition: all .1s ease;
+}
+
+div.user-panel a.user-button:active {
+    -webkit-transform:scale(.9); /* Safari and Chrome */
+    -moz-transform:scale(.9); /* Firefox */
+    -ms-transform:scale(.9); /* IE 9 */
+    -o-transform:scale(.9); /* Opera */
+     transform:scale(.9);
+}
+
+div.user-panel a.elin {
+    color: #b30059;
+}
+
+div.user-panel a.jimmie {
+    color: #1a53ff;
+}
+
+div.user-panel a.karl {
+    color: #2eb8b8;
+}
+
+div.user-panel a.maria {
+    color: #e65c00;
+}
+
+div.user-panel a.mike {
+    color: #b30000;
+}
+
+div.user-panel a.seba {
+    color: #00b300;
+}
+
+div.user-panel a.tintin {
+    color: #ffcc00;
+}
+
+.stats #histogram {
+    width: 100%;
+}
