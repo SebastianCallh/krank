@@ -2,59 +2,91 @@ module Insult.Stats where
 
 
 import Prelude
+
+import Data.Either (Either(..))
+import Data.Maybe (Maybe(..))
+import Effect (Effect)
+import Effect.Aff (Aff, launchAff)
+import Effect.Console (log)
 import Halogen as H
 import Halogen.HTML as HH
-import Effect (Effect)
-import Data.Maybe (Maybe (..))
-import Effect.Aff (Aff)
-import Effect.Console (log)
+import Halogen.HTML.Properties as HP
+import Insult.Api as Api
 import Insult.Insult (Insult)
 
-
-foreign import f :: Array Insult -> Effect Unit
+foreign import plotHistogram :: String -> Effect Unit
 
 data Query a
-  = Render  a
-  | FetchInsults a
+  = FetchInsults a
+
+type Error = String
+
+data InsultStatus
+  = NotFetched
+  | Fetching
+  | Fetched (Array Insult)
+  | Failed Error
 
 type Input = Unit
 
 type State =
-  { insults :: Array Insult
+  { insults :: InsultStatus
   }
 
 
 component :: H.Component HH.HTML Query Input Void Aff
 component =
-  H.component
+  H.lifecycleComponent
     { initialState: const initialState
     , render
     , eval
     , receiver: const Nothing
+    , initializer: pure $ H.action FetchInsults
+    , finalizer: Nothing
     }
   where
-    initialState = { insults: [] }
+    initialState =
+      { insults: NotFetched
+      }
 
 
 render :: State -> H.ComponentHTML Query
 render state =
-  HH.div_ [ HH.text "o hai" ]
+  HH.div
+  [ HP.class_ $ H.ClassName "stats"
+  ]
+  [ case state.insults of
+      NotFetched -> HH.div [ HP.id_ "histogram" ] [ ]
+      Fetching   -> HH.div_  [ HH.text "Laddar..." ]
+      Fetched insults ->
+        HH.div_
+        [ HH.canvas [ HP.id_ "histogram" ]
+        ]
+
+      Failed err ->
+        HH.div_
+        [ HH.text err
+        ]
+  ]
+
   
-      
 eval :: Query ~> H.ComponentDSL State Query Void Aff
 eval = case _ of
-  Render next -> do
-    insults <- H.gets _.insults
-    H.liftEffect $ do
-      log "re-rendering stats"
-      plotHistogram insults
-    
+  FetchInsults next -> do
+    result <- H.liftEffect $ launchAff fetchInsults
     pure next
 
-  FetchInsults next -> do
-    H.liftEffect $ log "fetching"
-    pure next
-    
-plotHistogram :: Array Insult -> Effect Unit
-plotHistogram = f
+  where
+    fetchInsults :: Aff Unit
+    fetchInsults = do
+      einsults <- Api.fetchInsults
+      case einsults of
+        Left err -> do
+          H.liftEffect $ log err
+          pure unit
+          
+        Right insults -> do
+          H.liftEffect $ plotHistogram $ show insults              
+          pure unit
+          
 
