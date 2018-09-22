@@ -1,9 +1,8 @@
 module Insult.Insult where
 
 import Prelude
-import Data.Argonaut (class DecodeJson, class EncodeJson, decodeJson,
-                      encodeJson, jsonNull, (.?), (:=), (~>))
 
+import Data.Argonaut (class DecodeJson, class EncodeJson, decodeJson, encodeJson, jsonNull, stringify, (.?), (:=), (~>))
 import User (User)
 
 newtype Insult = Insult
@@ -12,6 +11,8 @@ newtype Insult = Insult
   , amount :: Int
   }
 
+instance showInsult :: Show Insult where
+  show = encodeJson >>> stringify
 
 instance decodeInsult :: DecodeJson Insult where
   decodeJson json = do

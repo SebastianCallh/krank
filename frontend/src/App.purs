@@ -78,9 +78,14 @@ component =
 
 
     header text =
-      HH.div_
+      HH.div [ HP.class_ $ H.ClassName "header" ]
       [ HH.h1_ [ HH.text text ]
-      , HH.a   [ HP.href $ routeFor Stats ] [ HH.text "S" ]
+      , HH.a
+        [ HP.class_ $ H.ClassName "top-right"
+        , HP.href $ routeFor Stats
+        ]
+        [ HH.i [ HP.class_ $ H.ClassName "fa fa-bar-chart" ] []
+        ]
       , HH.hr_
       ]
       

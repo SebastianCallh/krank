@@ -2,8 +2,9 @@ module User where
 
 import Prelude
 
-import Data.Argonaut (class DecodeJson, class EncodeJson, fromString, stringify)
+import Data.Argonaut (class DecodeJson, class EncodeJson, fromString, stringify, toString)
 import Data.Either (Either(..))
+import Data.Maybe (maybe)
 
 data User
     = Elin
@@ -14,6 +15,9 @@ data User
     | Seba
     | Tintin
 
+instance showUser :: Show User where
+  show = userName
+  
 userName :: User -> String
 userName Elin   = "Elin"
 userName Jimmie = "Jimmie"
@@ -32,9 +36,7 @@ fromUserName "Mike"   = Right Mike
 fromUserName "Seba"   = Right Seba
 fromUserName "Tintin" = Right Tintin
 fromUserName unknown  = Left $
-                        "Could not parse "
-                        <> unknown
-                        <> " as User."
+  "Unknown username " <> unknown
 
 
 instance encodeUser :: EncodeJson User where
@@ -42,7 +44,14 @@ instance encodeUser :: EncodeJson User where
 
 
 instance decodeUser :: DecodeJson User where
-  decodeJson = stringify >>> fromUserName
+  decodeJson json =
+    maybe errorMsg fromUserName $ toString json
+    where
+      errorMsg = Left $
+        "Could not parse json " <>
+        stringify json <>
+        " as string"
+        
 
 allUsers :: Array User
 allUsers =

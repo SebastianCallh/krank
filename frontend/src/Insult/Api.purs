@@ -2,10 +2,10 @@ module Insult.Api where
 
 import Prelude
 
-import Affjax (get, post)
+import Affjax (get, post, printResponseFormatError)
 import Affjax.RequestBody as RequestBody
 import Affjax.ResponseFormat as ResponseFormat
-import Data.Argonaut (encodeJson, stringify)
+import Data.Argonaut (decodeJson, encodeJson)
 import Data.Either (Either(..))
 import Effect.Aff (Aff)
 import Effect.Console (log)
@@ -17,17 +17,16 @@ url :: String
 url = "http://localhost:8081/insult"
 
 
-fetchInsults :: Aff String
+fetchInsults :: Aff (Either String (Array Insult))
 fetchInsults = do
   res <- get ResponseFormat.json url
   case res.body of
     Left err -> do
-      H.liftEffect $ log $ "GET /api response failed to decode: "
-      pure $ "err"
+      pure <<< Left $ printResponseFormatError err
     Right json -> do
-      H.liftEffect $ log $ "GET /api response: " <> stringify json
-      pure $ stringify json
+      pure $ decodeJson json
       
+
 saveInsult :: Insult -> Aff Int
 saveInsult newInsult = do
   res <- post ResponseFormat.json url $ RequestBody.json (encodeJson newInsult)
