@@ -1,7 +1,6 @@
 npm-debug.log
 .DS_Store
-dist
-/dist
+/frontend/dist/index.js
 /frontend/bower_components/
 /frontend/node_modules/
 /frontend/.pulp-cache/
