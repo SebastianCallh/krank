@@ -2,11 +2,11 @@ module Insult.Creator where
 
 import Prelude
 
-import Data.Argonaut (encodeJson, stringify)
+
 import Data.Maybe (Maybe(..))
 import Data.String.Common (toLower)
 import Effect.Aff (Aff, launchAff)
-import Effect.Console (log)
+import Effect (Effect)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
@@ -17,19 +17,18 @@ import Router (Route(..), routeFor)
 import User (User, userName, allUsers)
 import Web.UIEvent.MouseEvent (MouseEvent)
 
+foreign import playSound :: Unit -> Effect Unit
+
 data Query a
   = SendInsult User User a
   | ShowMessage String a
   | HandleInput Input a
-
+  
 type Input = Maybe User
-
-
 
 type State = 
   { msender  :: Maybe User
   , mmessage :: Maybe String
---  , nav      :: PushStateInterface
   }
     
 
@@ -101,9 +100,10 @@ eval = case _ of
           , to: to
           , amount: 1
           }
-    H.liftEffect $ log $ "json: " <> stringify (encodeJson insult)
-    
-    _ <- H.liftEffect <<< launchAff <<< saveInsult $
+
+    _ <- H.liftEffect do
+      playSound unit    
+      launchAff $ saveInsult $
          Insult { from: from
                 , to: to
                 , amount: 1
