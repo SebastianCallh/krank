@@ -1,0 +1,18 @@
+#!/bin/bash
+
+./script/build
+
+# Package temporay .keter-file
+mkdir krank
+cp backend/.stack-work/install/x86_64-linux/lts-12.9/8.4.3/bin/krank-exe krank
+cp -r config krank/config
+cp -r backend/static krank/static
+cd krank
+tar czfv ../krank.keter krank-exe config static
+cd ..
+
+# Copy to server
+scp -i /home/seba/Documents/ec2/master-explorer-2.pem krank.keter  ubuntu@sebastiancallh.com:/var/www/keter/incoming
+
+# Remove file
+rm -rf krank krank.keter
