@@ -1,7 +1,13 @@
 'use strict;'
 
-exports.playSound = function () {
+exports.playAudio = function (audio) {
     return function () {
-	new Audio('air-horn.mp3').play();
+	audio.play()
+    }
+}
+
+exports.loadAudio = function (filePath) {
+    return function () {
+	new Audio(filePath);
     }
 }
