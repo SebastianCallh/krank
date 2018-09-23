@@ -1,7 +1,7 @@
 {
     "scripts": {
         "build": "pulp build --to dist/index.js",
-        "watch": "pulp --watch build --to dist/index.js"
+        "watch": "pulp --watch --then 'cp dist/* ../backend/static/' build --to dist/index.js "
     },
     "dependencies": {}
 }
