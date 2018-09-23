@@ -10,3 +10,6 @@ npm-debug.log
 /frontend/.psc*
 /frontend/.purs*
 /frontend/.psa*
+
+/backend/static
+/backend/insult.db
