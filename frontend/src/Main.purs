@@ -17,4 +17,4 @@ main = HA.runHalogenAff do
   driver <- runUI App.component unit body
   nav    <- H.liftEffect makeInterface  
   _      <- forkAff $ App.routeSignal driver
-  H.liftEffect $ nav.pushState (unsafeToForeign {}) "#insult/from"
+  H.liftEffect $ nav.pushState (unsafeToForeign {}) "#insult"

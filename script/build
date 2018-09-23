@@ -1,0 +1,15 @@
+#!/bin/bash
+
+echo "Building..."
+stack build --stack-yaml=backend/stack.yaml
+
+# Build the client
+cd frontend
+pulp build --to dist/index.js
+cd ..
+
+# Copy over the javascript
+cp -u frontend/dist/* backend/static/
+uglifyjs --compress --output backend/static/index.js -- backend/static/index.js
+
+echo "Done building!"
