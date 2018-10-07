@@ -24,11 +24,7 @@ routes =
   , Stats          <$ lit "stats"
   ] <* end
 
-
 routeFor :: Route -> String
-routeFor SelectSender              = "#insult"
+routeFor SelectSender              = "#insult/from"
 routeFor (SelectReceiver userName) = "#insult/from/" <> userName
 routeFor Stats                     = "#insult/stats"
-
-
-
