@@ -102,8 +102,9 @@ render state =
                      , HP.class_ $ H.ClassName "menu-text"
                      ] [ HH.text "Meny" ]
                    ]
-          , HH.li_ [ menuLink SelectSender "active" "Nytt kränk" "fa fa-bullhorn" ]
-          , HH.li_ [ menuLink Stats "inactive" "Statistik" "fa fa-bar-chart"]
+          , HH.li_ [ menuLink SelectSender "Nytt kränk" "fa fa-bullhorn" ]
+          , HH.li_ [ menuLink Stats "Statistik" "fa fa-bar-chart"]
+--          , HH.li_ [ menuLink Stats "Admin" "fa fa-bar-chart"]
           ]
         ]
       , HH.div [ HP.id_ "menuToggle" ]
@@ -118,7 +119,6 @@ render state =
             ]
           ]
       ]
-
       
     ulClass =
       case state.navStatus of
@@ -133,7 +133,7 @@ render state =
         Extended  -> "topnav responsive"
         Collapsed -> "topnav"
         
-    menuLink route activeClass text iconClass =
+    menuLink route text iconClass =
       HH.a [ HP.class_ $ activeIfRoute route
            , HP.href $ routeFor route
            ]
