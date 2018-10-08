@@ -90,7 +90,7 @@ render state =
       [ header "Admin"
       , content $ HH.slot' adminSlot unit Admin.component unit absurd
       ]
-
+      
   where
     header text =
       HH.div [ HP.class_ $ H.ClassName "header" ]
@@ -98,13 +98,16 @@ render state =
       , HH.nav_
         [
           HH.div [ HP.id_ "menuToggle" ]
-          [ HH.input [ HP.type_ $ HP.InputCheckbox ]
+          [ HH.input
+            [ HP.type_ $ HP.InputCheckbox
+            , HE.onChange $ HE.input_ ToggleNav
+            ]
           , HH.div [HP.id_ "spanwrap" ]
             [ HH.span_ []
             , HH.span_ []
             , HH.span_ []
             ]
-          , HH.ul [ HP.id_ "menu" ]
+          , HH.ul [ HP.id_ "menu", HP.class_ $ H.ClassName ulClass ]
             [ HH.li_ [ menuLink SelectSender "menu-text" "Meny" "" ]
             , HH.li_ [ menuLink SelectSender "active" "Nytt kränk" "fa fa-bullhorn" ]
             , HH.li_ [ menuLink Stats "inactive" "Statistik" "fa fa-bar-chart"]
@@ -113,6 +116,11 @@ render state =
         ]
       , HH.hr_
       ]
+
+    ulClass =
+      case state.navStatus of
+        Extended  -> "extended"
+        Collapsed -> "collapsed"
 
 
     content body =
@@ -139,7 +147,9 @@ render state =
 
 eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Void Aff
 eval (NavigateTo route next) = do
-  H.modify_ _ { currentRoute = route }        
+  H.modify_ _ { currentRoute = route
+              , navStatus    = Collapsed
+              }
   pure next
 
 eval (ToggleNav next) = do
