@@ -1,12 +1,11 @@
 module Insult.Stats where
 
-
 import Prelude
 
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Effect.Aff (Aff, launchAff)
+import Effect.Aff (Aff)
 import Effect.Console (log)
 import Halogen as H
 import Halogen.HTML as HH
@@ -33,7 +32,6 @@ type State =
   { insults :: InsultStatus
   }
 
-
 component :: H.Component HH.HTML Query Input Void Aff
 component =
   H.lifecycleComponent
@@ -49,44 +47,28 @@ component =
       { insults: NotFetched
       }
 
-
 render :: State -> H.ComponentHTML Query
 render state =
   HH.div
   [ HP.class_ $ H.ClassName "stats"
   ]
   [ case state.insults of
-      NotFetched -> HH.div [ HP.id_ "histogram" ] [ ]
-      Fetching   -> HH.div_  [ HH.text "Laddar..." ]
-      Fetched insults ->
-        HH.div_
-        [ HH.canvas [ HP.id_ "histogram" ]
-        ]
-
-      Failed err ->
-        HH.div_
-        [ HH.text err
-        ]
+      NotFetched      -> HH.div_ [ HH.text "Ingen statistik hämtad" ]
+      Fetching        -> HH.div [ HP.class_ $ H.ClassName "loader" ] []
+      Fetched insults -> HH.div [ HP.id_ "histogram" ] [ ]
+      Failed err      -> HH.div_ [ HH.text err ]
   ]
-
   
 eval :: Query ~> H.ComponentDSL State Query Void Aff
 eval = case _ of
   FetchInsults next -> do
-    result <- H.liftEffect $ launchAff fetchInsults
+    H.modify_ _ { insults = Fetching }
+    H.liftAff Api.fetchInsults >>= case _ of
+      Left err -> 
+        H.liftEffect $ log err
+           
+      Right insults -> do
+        H.modify_ _ { insults = Fetched insults }
+        H.liftEffect $ plotHistogram $ show insults              
+        
     pure next
-
-  where
-    fetchInsults :: Aff Unit
-    fetchInsults = do
-      einsults <- Api.fetchInsults
-      case einsults of
-        Left err -> do
-          H.liftEffect $ log err
-          pure unit
-          
-        Right insults -> do
-          H.liftEffect $ plotHistogram $ show insults              
-          pure unit
-          
-

@@ -97,10 +97,6 @@ div.user-panel a.tintin {
     color: #ffcc00;
 }
 
-.stats #histogram {
-    width: 100%;
-}
-
 .topnav {
   overflow: hidden;
   margin: 5px;
@@ -214,7 +210,7 @@ div.user-panel a.tintin {
     margin: -53px 0 0 -8px;
     position: absolute;
     left: 0px;
-    background: #ededed;
+    background: #f3f3f3;
     width: 102vw;
     z-index: 1;
     -webkit-font-smoothing: antialiased;
@@ -272,4 +268,23 @@ div.header nav a.active {
 
 .header .extended {
     transform: none !important;
+}
+
+.stats #histogram {
+    width: 100%;
+}
+
+.stats .loader {
+    border: 16px solid #f3f3f3;
+    border-top: 16px solid #3498db;
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+    margin: 30px auto 0px auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
