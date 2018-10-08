@@ -10,12 +10,13 @@ data Route
   = SelectSender
   | SelectReceiver UserName
   | Stats
+  | Admin
 
+derive instance eqRoute :: Eq Route
 
 instance showRoute :: Show Route where
   show = routeFor
 
-  
 routes :: Match Route
 routes =
   lit "insult" *> oneOf
@@ -28,3 +29,4 @@ routeFor :: Route -> String
 routeFor SelectSender              = "#insult/from"
 routeFor (SelectReceiver userName) = "#insult/from/" <> userName
 routeFor Stats                     = "#insult/stats"
+routeFor Admin                     = "#admin"

@@ -34,7 +34,7 @@ flipNavStatus Collapsed = Extended
 
 type State =
   { currentRoute :: Route
-  , navStatus   :: NavStatus
+  , navStatus    :: NavStatus
   }
   
 type ChildQuery = Coproduct3 Creator.Query Stats.Query Admin.Query
@@ -94,10 +94,19 @@ render state =
   where
     header text =
       HH.div [ HP.class_ $ H.ClassName "header" ]
-      [ HH.span_ [ HH.h1_ [  HH.text text ] ]
-      , HH.nav_
-        [
-          HH.div [ HP.id_ "menuToggle" ]
+      [ HH.h1_ [ HH.text text ]
+      , HH.nav [ HP.class_ $ H.ClassName ulClass ]
+        [ HH.ul_
+          [ HH.li_ [ HH.a
+                     [ HP.href "#"
+                     , HP.class_ $ H.ClassName "menu-text"
+                     ] [ HH.text "Meny" ]
+                   ]
+          , HH.li_ [ menuLink SelectSender "active" "Nytt kränk" "fa fa-bullhorn" ]
+          , HH.li_ [ menuLink Stats "inactive" "Statistik" "fa fa-bar-chart"]
+          ]
+        ]
+      , HH.div [ HP.id_ "menuToggle" ]
           [ HH.input
             [ HP.type_ $ HP.InputCheckbox
             , HE.onChange $ HE.input_ ToggleNav
@@ -107,21 +116,14 @@ render state =
             , HH.span_ []
             , HH.span_ []
             ]
-          , HH.ul [ HP.id_ "menu", HP.class_ $ H.ClassName ulClass ]
-            [ HH.li_ [ menuLink SelectSender "menu-text" "Meny" "" ]
-            , HH.li_ [ menuLink SelectSender "active" "Nytt kränk" "fa fa-bullhorn" ]
-            , HH.li_ [ menuLink Stats "inactive" "Statistik" "fa fa-bar-chart"]
-            ]
           ]
-        ]
-      , HH.hr_
       ]
 
+      
     ulClass =
       case state.navStatus of
         Extended  -> "extended"
         Collapsed -> "collapsed"
-
 
     content body =
       HH.div [ HP.class_ $ H.ClassName "content" ] [ body ]
@@ -132,15 +134,21 @@ render state =
         Collapsed -> "topnav"
         
     menuLink route activeClass text iconClass =
-      HH.a [ HP.class_ $ H.ClassName activeClass
+      HH.a [ HP.class_ $ activeIfRoute route
            , HP.href $ routeFor route
            ]
         [ HH.div_
           [ HH.i [ HP.class_ $ H.ClassName iconClass ] []
           , HH.text text
-          ]  
+          ]
         ]
-      
+
+    activeIfRoute route =
+      H.ClassName $
+      if state.currentRoute == route
+      then "active"
+      else ""
+
     contentSlot = CP.cp1
     statsSlot   = CP.cp2
     adminSlot   = CP.cp3
