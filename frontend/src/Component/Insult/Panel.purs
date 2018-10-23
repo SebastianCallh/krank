@@ -1,4 +1,4 @@
-module Insult.Creator where
+module Component.Insult.Panel where
 
 import Prelude
 
@@ -13,17 +13,20 @@ import Data.Time (Time, adjust)
 import Data.Tuple (Tuple(..))
 import Effect.Console (log)
 import Effect (Effect)
-import Effect.Aff (Aff, Fiber, Milliseconds(..), delay, error, killFiber, launchAff)
+import Effect.Aff (Fiber, Milliseconds(..), delay, error, killFiber, launchAff)
 import Effect.Now (nowTime)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Events as HE
 import Halogen.HTML.Properties as HP
-import Insult.Api (fetchAudio, saveInsult)
+
 import Insult.Insult (Insult(..), Amount(..))
 import Router (Route(..), routeFor)
 import User (User, userName, allUsers)
 import Web.UIEvent.MouseEvent (MouseEvent)
+
+import Api (fetchAudio, saveInsult)
+import App (AppM)
 
 newtype Aud = Aud Unit
 foreign import playAudio :: Unit -> Effect Aud
@@ -60,8 +63,7 @@ updateStatusFiber expires' fiber' mstatus =
 isStatusExpired :: Time -> InsultStatus -> Boolean
 isStatusExpired t status = maybe true (t >_) status.expires
 
-
-component :: H.Component HH.HTML Query Input Void Aff
+component :: H.Component HH.HTML Query Input Void AppM
 component =
   H.lifecycleComponent
     { initialState: initialState
@@ -128,7 +130,7 @@ userPanel userHref userClicked statuses =
       H.ClassName $ "user-button " <> toLower (userName user)
 
 
-eval :: Query ~> H.ComponentDSL State Query Void Aff
+eval :: Query ~> H.ComponentDSL State Query Void AppM
 eval (IncreaseInsult from to next) = do
     maud <- H.gets _.onClickAudio
     mctx <- H.gets _.audioContext
@@ -181,7 +183,6 @@ eval (IncreaseInsult from to next) = do
             , to: to
             , amount: amount
             }
-
       
 eval (ShowMessage msg next) = do
     H.modify_ _ { mmessage = Just msg }

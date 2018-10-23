@@ -46,7 +46,6 @@ instance decodeInsult :: DecodeJson Insult where
           , amount: amount
           }
 
-
 instance encodeInsult :: EncodeJson Insult where
   encodeJson (Insult i) =
     "from"   := encodeJson i.from   ~>

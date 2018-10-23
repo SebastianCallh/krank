@@ -1,17 +1,18 @@
-module Insult.Stats where
+module Component.Insult.Stats where
 
 import Prelude
 
 import Data.Either (Either(..))
 import Data.Maybe (Maybe(..))
 import Effect (Effect)
-import Effect.Aff (Aff)
 import Effect.Console (log)
 import Halogen as H
 import Halogen.HTML as HH
 import Halogen.HTML.Properties as HP
-import Insult.Api as Api
+
 import Insult.Insult (Insult)
+import Api as Api
+import App (AppM)
 
 foreign import plotHistogram :: String -> Effect Unit
 
@@ -32,7 +33,7 @@ type State =
   { insults :: InsultStatus
   }
 
-component :: H.Component HH.HTML Query Input Void Aff
+component :: H.Component HH.HTML Query Input Void AppM
 component =
   H.lifecycleComponent
     { initialState: const initialState
@@ -59,7 +60,7 @@ render state =
       Failed err      -> HH.div_ [ HH.text err ]
   ]
   
-eval :: Query ~> H.ComponentDSL State Query Void Aff
+eval :: Query ~> H.ComponentDSL State Query Void AppM
 eval = case _ of
   FetchInsults next -> do
     H.modify_ _ { insults = Fetching }

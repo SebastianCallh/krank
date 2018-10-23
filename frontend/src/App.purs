@@ -1,173 +1,90 @@
-module App where
+module App
+  ( AppState (..)
+  , AppQuery (..)
+  , AppM
+  , runAppM
+  ) where
 
+
+import Krank.Control.MonadNavigate (class MonadNavigate)
+import Krank.Control.MonadState (class MonadState)
 import Prelude
 
-import Data.Either (Either(..))
-import Data.Either.Nested (Either3)
-import Data.Functor.Coproduct.Nested (Coproduct3)
-import Data.Maybe (Maybe(..))
+import Common.Session (Session)
+import Control.Monad.Reader (ask, asks, runReaderT)
+import Control.Monad.Reader.Class (class MonadAsk)
+import Control.Monad.Reader.Trans (ReaderT)
+import Data.Maybe (Maybe)
+import Data.Newtype (class Newtype, unwrap)
 import Effect (Effect)
-import Effect.Aff (Aff, launchAff)
+import Effect.Aff (Aff)
+import Effect.Aff.Class (class MonadAff)
+import Effect.Class (class MonadEffect)
+import Effect.Ref (Ref)
+import Effect.Ref as Ref
 import Halogen as H
-import Halogen.Component.ChildPath as CP
-import Halogen.HTML as HH
-import Halogen.HTML.Events as HE
-import Halogen.HTML.Properties as HP
-import Insult.Admin as Admin
-import Insult.Creator as Creator
-import Insult.Stats as Stats
-import Router (Route(..), routeFor, routes)
-import Routing.Hash (matches)
-import User as User
+import Router (Route)
+import Type.Equality as TE
 
-type Input = Unit
+type AppEnv = 
+  { state :: Ref AppState
+  , push  :: AppQuery -> Effect Unit
+  }
 
-data Query a
-  = NavigateTo Route a
-  | ToggleNav a
-
-data NavStatus = Extended | Collapsed
-
-flipNavStatus :: NavStatus -> NavStatus
-flipNavStatus Extended = Collapsed
-flipNavStatus Collapsed = Extended
-
-type State =
-  { currentRoute :: Route
-  , navStatus    :: NavStatus
+type AppState =
+  { session :: Maybe Session
   }
   
-type ChildQuery = Coproduct3 Creator.Query Stats.Query Admin.Query
-type ChildSlot  = Either3 Unit Unit Unit
+-- Uses a ReaderT (Ref AppState) instead of StateT AppState to avoid issues with
+-- https://github.com/slamdata/purescript-halogen/issues/386
+newtype AppM a = AppM (ReaderT AppEnv Aff a)
+derive instance newtypeAppM :: Newtype (AppM a) _
+derive newtype instance functorAppM :: Functor AppM
+derive newtype instance applyAppM :: Apply AppM
+derive newtype instance applicativeAppM :: Applicative AppM
+derive newtype instance bindAppM :: Bind AppM
+derive newtype instance monadAppM :: Monad AppM
+derive newtype instance monadEffectAppM :: MonadEffect AppM
+derive newtype instance monadAffAppM :: MonadAff AppM
 
+runAppM :: forall a. AppM a -> AppEnv -> Aff a
+runAppM app state = do
+  runReaderT (unwrap app) state
 
-component :: H.Component HH.HTML Query Input Void Aff
-component =
-  H.parentComponent
-    { initialState: const initialState
-    , render
-    , eval
-    , receiver: const Nothing
-    }
-  where
-    initialState =
-      { currentRoute: SelectSender
-      , navStatus: Collapsed
-      }
+-- | We need a HalogenM instance in order to be able to use this DSL
+-- | within our component's `eval`.
+--instance monadStateHalogenM :: Reader AppState m => Reader AppState (HalogenM s f g p o m) where
+--  state = H.lift state
 
+{-instance monadStateAppM :: MonadState AppState AppM where
+  state f = do
+    ref <- AppM ask
+    s   <- H.liftEffect $ Ref.read ref
+    let Tuple a s' = f s
+    H.liftEffect $ Ref.write s' ref
+    pure a    
+-}
 
-render :: State -> H.ParentHTML Query ChildQuery ChildSlot Aff
-render state =
-  case state.currentRoute of
-    SelectSender->
-      HH.div_
-      [ header "Vem kränkte?"
-      , content $ HH.slot' contentSlot unit Creator.component Nothing absurd
-      ]
-                    
-    SelectReceiver userName ->
-      case User.fromUserName userName of
-        Left _err ->
-          HH.div_
-          [ header "404"
-          , content $ HH.h2_ [ HH.text $ "Ingen användare vid namn " <> userName]
-          ]
-                
-        Right user ->
-          HH.div_
-          [ header $ (User.userName user) <> " kränkte vem?"
-          , content $ HH.slot' contentSlot unit Creator.component (Just user) absurd
-          ]
+instance monadAskAppM :: TE.TypeEquals e AppEnv => MonadAsk e AppM where
+  ask = AppM $ asks TE.from
 
-    Stats ->
-      HH.div_
-      [ header "Statistik"
-      , content $ HH.slot' statsSlot unit Stats.component unit absurd
-      ]
+-- | Encode get/set state. We use the same trick as for `MonadAsk`, using
+-- | our environment's `state`.
+instance monadStateAppM :: TE.TypeEquals s AppState => MonadState s AppM where
+  getState = AppM do
+    env <- ask
+    H.liftEffect $ TE.from <$> Ref.read env.state
 
-    Admin ->
-      HH.div_
-      [ header "Admin"
-      , content $ HH.slot' adminSlot unit Admin.component unit absurd
-      ]
-      
-  where
-    header text =
-      HH.div [ HP.class_ $ H.ClassName "header" ]
-      [ HH.h1_ [ HH.text text ]
-      , HH.nav [ HP.class_ $ H.ClassName ulClass ]
-        [ HH.ul_
-          [ HH.li_ [ HH.a
-                     [ HP.href "#"
-                     , HP.class_ $ H.ClassName "menu-text"
-                     ] [ HH.text "Meny" ]
-                   ]
-          , HH.li_ [ menuLink SelectSender "Nytt kränk" "fa fa-bullhorn" ]
-          , HH.li_ [ menuLink Stats "Statistik" "fa fa-bar-chart"]
---          , HH.li_ [ menuLink Stats "Admin" "fa fa-bar-chart"]
-          ]
-        ]
-      , HH.div [ HP.id_ "menuToggle" ]
-          [ HH.input
-            [ HP.type_ $ HP.InputCheckbox
-            , HE.onChange $ HE.input_ ToggleNav
-            ]
-          , HH.div [HP.id_ "spanwrap" ]
-            [ HH.span_ []
-            , HH.span_ []
-            , HH.span_ []
-            ]
-          ]
-      ]
-      
-    ulClass =
-      case state.navStatus of
-        Extended  -> "extended"
-        Collapsed -> "collapsed"
+  modifyState f = AppM do
+    env <- ask
+    H.liftEffect $ Ref.modify_ (TE.to <<< f <<< TE.from) env.state
 
-    content body =
-      HH.div [ HP.class_ $ H.ClassName "content" ] [ body ]
-      
-    headerClassName =
-      case state.navStatus of
-        Extended  -> "topnav responsive"
-        Collapsed -> "topnav"
-        
-    menuLink route text iconClass =
-      HH.a [ HP.class_ $ activeIfRoute route
-           , HP.href $ routeFor route
-           ]
-        [ HH.div_
-          [ HH.i [ HP.class_ $ H.ClassName iconClass ] []
-          , HH.text text
-          ]
-        ]
+data AppQuery
+  = AppNavigate Route
 
-    activeIfRoute route =
-      H.ClassName $
-      if state.currentRoute == route
-      then "active"
-      else ""
-
-    contentSlot = CP.cp1
-    statsSlot   = CP.cp2
-    adminSlot   = CP.cp3
-
-eval :: Query ~> H.ParentDSL State Query ChildQuery ChildSlot Void Aff
-eval (NavigateTo route next) = do
-  H.modify_ _ { currentRoute = route
-              , navStatus    = Collapsed
-              }
-  pure next
-
-eval (ToggleNav next) = do
-  H.modify_ $ \s -> s { navStatus = flipNavStatus s.navStatus }
-  pure next
-      
-routeSignal :: H.HalogenIO Query Void Aff -> Aff (Effect Unit)
-routeSignal driver =
-  H.liftEffect (matches routes hashChanged)
-  where
-    hashChanged _ newRoute = do
-      _ <- launchAff $ driver.query <<< H.action $ NavigateTo newRoute
-      pure unit
+-- | Navigate will simply use the `push` part of our environment
+-- | to send the new route to the router through our event listener.
+instance monadNavigateAppM :: MonadNavigate AppM where
+  navigate route = AppM do
+    env <- ask
+    H.liftEffect $ env.push $ AppNavigate route

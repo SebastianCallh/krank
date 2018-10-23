@@ -18,13 +18,21 @@ instance showRoute :: Show Route where
   show = routeFor
 
 routes :: Match Route
-routes =
-  lit "insult" *> oneOf
-  [ SelectReceiver <$> (lit "from" *> str)
-  , SelectSender   <$ lit "from"
-  , Stats          <$ lit "stats"
-  ] <* end
-
+routes = oneOf
+  [ insultRoute
+  , adminRoute
+  ]
+  where
+    insultRoute = lit "insult" *> oneOf
+      [ SelectReceiver <$> (lit "from" *> str)
+      , SelectSender   <$ lit "from"
+      , Stats          <$ lit "stats"
+      ] <* end
+      
+    adminRoute = lit "admin" *> oneOf
+      [ pure Admin 
+      ] <* end
+      
 routeFor :: Route -> String
 routeFor SelectSender              = "#insult/from"
 routeFor (SelectReceiver userName) = "#insult/from/" <> userName

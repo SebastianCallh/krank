@@ -1,4 +1,8 @@
-module Insult.Api where
+module Api
+  ( fetchInsults
+  , saveInsult
+  , fetchAudio
+  ) where
 
 import Prelude
 
@@ -29,8 +33,7 @@ fetchInsults = do
     Left err -> do
       pure <<< Left $ printResponseFormatError err
     Right json -> do
-      pure $ decodeJson json
-      
+      pure $ decodeJson json      
 
 saveInsult :: Insult -> Aff Int
 saveInsult newInsult = do
